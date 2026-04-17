@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Foundations · Popstart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════
+   DESIGN SYSTEM
+   ═════════════════════════════════════════════════════ */
+:root {
+  --ink: #111714;
+  --ink-soft: #3a453f;
+  --ink-muted: #6b7670;
+  --paper: #f5f1e8;
+  --paper-warm: #eee7d6;
+  --paper-deep: #e4dcc4;
+  --accent: #d4542e;
+  --accent-deep: #a8401e;
+  --accent-soft: #f2d4c5;
+  --green: #2f5d3a;
+  --amber: #c68418;
+  --red: #a63124;
+  --rule: #d4ccb4;
+  --f-display: "Fraunces", Georgia, serif;
+  --f-body: "Inter Tight", -apple-system, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════
+   APP SHELL
+   ═════════════════════════════════════════════════════ */
+.app {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+  max-width: 820px;
+  margin: 0 auto;
+  background: var(--paper);
+  position: relative;
+}
+@media (min-width: 1100px) {
+  .app {
+    border-left: 1px solid var(--rule);
+    border-right: 1px solid var(--rule);
+    box-shadow: 0 0 80px rgba(17,23,20,.04);
+  }
+}
+
+/* ─── Header ─── */
+.chat-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--rule);
+  background: rgba(245, 241, 232, 0.96);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.agent-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.agent-avatar {
+  width: 40px; height: 40px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--f-display);
+  font-weight: 500;
+  font-size: 18px;
+  font-style: italic;
+  position: relative;
+}
+.agent-avatar::after {
+  content: "";
+  position: absolute;
+  bottom: 1px; right: 1px;
+  width: 10px; height: 10px;
+  background: var(--green);
+  border: 2px solid var(--paper);
+  border-radius: 999px;
+}
+.agent-name-block { line-height: 1.2; }
+.agent-name {
+  font-family: var(--f-display);
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+.agent-status {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.progress-indicator {
+  display: flex;
+  gap: 4px;
+}
+.progress-dot {
+  width: 20px; height: 3px;
+  background: var(--paper-deep);
+  border-radius: 2px;
+  transition: background 0.3s;
+}
+.progress-dot.active { background: var(--accent); }
+.progress-dot.done { background: var(--ink); }
+@media (max-width: 520px) {
+  .chat-header { padding: 12px 16px; }
+  .progress-indicator { display: none; }
+}
+
+/* ─── Messages scroll ─── */
+.messages {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scroll-behavior: smooth;
+}
+.messages::-webkit-scrollbar { width: 6px; }
+.messages::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+@media (max-width: 520px) {
+  .messages { padding: 16px; }
+}
+
+/* ─── Message bubbles ─── */
+.msg {
+  max-width: 82%;
+  animation: bubbleIn 0.35s cubic-bezier(.2,.8,.2,1);
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+@keyframes bubbleIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.msg-agent {
+  align-self: flex-start;
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+.msg-avatar-small {
+  width: 28px; height: 28px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--f-display);
+  font-style: italic;
+  font-size: 13px;
+  font-weight: 500;
+  flex-shrink: 0;
+  margin-bottom: 2px;
+}
+.msg-agent + .msg-agent .msg-avatar-small { visibility: hidden; }
+.msg-bubble {
+  background: #fff;
+  padding: 14px 18px;
+  border-radius: 18px 18px 18px 4px;
+  box-shadow: 0 1px 2px rgba(17,23,20,.04);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+.msg-bubble em { font-family: var(--f-display); font-style: italic; color: var(--accent); font-size: 17px; }
+.msg-bubble strong { font-weight: 600; color: var(--ink); }
+.msg-bubble code {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  background: var(--paper-warm);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+.msg-bubble a { color: var(--accent); text-decoration: underline; }
+
+.msg-user {
+  align-self: flex-end;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 12px 16px;
+  border-radius: 18px 18px 4px 18px;
+  font-size: 15px;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(17,23,20,.1);
+}
+
+/* System message — for stage transitions */
+.msg-system {
+  align-self: center;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  padding: 8px 16px;
+  background: var(--paper-warm);
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  margin: 8px 0;
+}
+.msg-system::before, .msg-system::after {
+  content: "·";
+  margin: 0 8px;
+  color: var(--accent);
+}
+
+/* ─── Typing indicator ─── */
+.typing {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  align-self: flex-start;
+  animation: bubbleIn 0.25s cubic-bezier(.2,.8,.2,1);
+}
+.typing-bubble {
+  background: #fff;
+  padding: 14px 18px;
+  border-radius: 18px 18px 18px 4px;
+  box-shadow: 0 1px 2px rgba(17,23,20,.04);
+  display: flex;
+  gap: 4px;
+}
+.typing-dot {
+  width: 7px; height: 7px;
+  background: var(--ink-muted);
+  border-radius: 999px;
+  animation: typingPulse 1.2s infinite ease-in-out;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typingPulse {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
+/* ─── Inline input controls ─── */
+.input-wrap {
+  align-self: stretch;
+  margin-top: -4px;
+  padding: 2px 40px 8px 46px;
+  animation: bubbleIn 0.4s cubic-bezier(.2,.8,.2,1) 0.2s;
+  animation-fill-mode: both;
+}
+@media (max-width: 520px) { .input-wrap { padding: 2px 8px 8px 40px; } }
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  padding: 10px 16px;
+  background: #fff;
+  border: 1.5px solid var(--rule);
+  border-radius: 999px;
+  font-family: var(--f-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.chip:hover { border-color: var(--ink); background: var(--paper-warm); transform: translateY(-1px); }
+.chip:active { transform: translateY(0); }
+.chip.selected {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+  pointer-events: none;
+}
+
+.dropdown-wrap { position: relative; }
+.dropdown-btn {
+  width: 100%;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1.5px solid var(--rule);
+  border-radius: 8px;
+  text-align: left;
+  font-family: var(--f-body);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--ink-muted);
+  transition: border-color 0.12s;
+}
+.dropdown-btn:hover { border-color: var(--ink); }
+.dropdown-btn.has-value { color: var(--ink); font-weight: 500; }
+.dropdown-arrow {
+  font-family: var(--f-mono);
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(17,23,20,.1);
+  max-height: 240px;
+  overflow-y: auto;
+  display: none;
+  z-index: 5;
+}
+.dropdown-menu.open { display: block; }
+.dropdown-item {
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  border-bottom: 1px solid var(--rule);
+  transition: background 0.1s;
+}
+.dropdown-item:last-child { border-bottom: none; }
+.dropdown-item:hover { background: var(--paper-warm); }
+
+.text-input-wrap { display: flex; gap: 8px; }
+.text-input {
+  flex: 1;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1.5px solid var(--rule);
+  border-radius: 8px;
+  font-family: var(--f-body);
+  font-size: 15px;
+  color: var(--ink);
+}
+.text-input:focus { outline: none; border-color: var(--accent); }
+.text-submit {
+  padding: 12px 18px;
+  background: var(--ink);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--f-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.text-submit:hover { background: var(--accent); }
+.text-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ─── Action plan cards ─── */
+.plan-cards {
+  align-self: stretch;
+  padding: 0 40px 8px 46px;
+  margin-top: 4px;
+  animation: bubbleIn 0.4s cubic-bezier(.2,.8,.2,1);
+}
+@media (max-width: 520px) { .plan-cards { padding: 0 8px 8px 40px; } }
+.plan-card {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 20px 22px;
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+}
+.plan-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.plan-card.card1::before { background: var(--ink); }
+.plan-card.card2::before { background: var(--amber); }
+.plan-card.card3::before { background: var(--accent); }
+.plan-card.card4 {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.plan-card.card4::before { background: var(--accent); }
+.plan-card-label {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 8px;
+}
+.plan-card.card4 .plan-card-label { color: var(--accent-soft); }
+.plan-card-title {
+  font-family: var(--f-display);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  margin-bottom: 14px;
+}
+.plan-card.card4 .plan-card-title em { font-style: italic; color: var(--accent-soft); }
+
+.rag-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.rag-item {
+  padding: 10px 12px;
+  background: var(--paper);
+  border-radius: 6px;
+  border-left: 3px solid;
+  font-size: 13px;
+}
+.rag-item.green { border-left-color: var(--green); }
+.rag-item.amber { border-left-color: var(--amber); }
+.rag-item.red { border-left-color: var(--red); }
+.rag-item.na { border-left-color: var(--rule); }
+.rag-item-title { font-weight: 600; margin-bottom: 2px; }
+.rag-item-note { color: var(--ink-muted); font-size: 12px; }
+.rag-item.red .rag-item-note { color: var(--red); }
+.rag-item.amber .rag-item-note { color: var(--amber); }
+.rag-item.green .rag-item-note { color: var(--green); }
+
+.gap-entry {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.gap-entry:last-child { border-bottom: none; padding-bottom: 0; }
+.gap-entry:first-child { padding-top: 0; }
+.gap-entry-title {
+  font-family: var(--f-display);
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.gap-entry-body { font-size: 14px; color: var(--ink-soft); line-height: 1.5; }
+
+.step-entry {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 14px;
+  align-items: start;
+}
+.step-entry:last-child { border-bottom: none; padding-bottom: 0; }
+.step-entry:first-child { padding-top: 0; }
+.step-num {
+  font-family: var(--f-display);
+  font-style: italic;
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--accent);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.step-title { font-weight: 600; margin-bottom: 2px; }
+.step-why { font-size: 13px; color: var(--ink-muted); line-height: 1.5; }
+.step-time {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  padding: 4px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  white-space: nowrap;
+  margin-top: 3px;
+}
+
+.plan-card.card4 .plan-card-body {
+  font-size: 14px;
+  color: var(--paper-warm);
+  line-height: 1.55;
+  margin-bottom: 14px;
+}
+.plan-card.card4 .quick-win-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.08);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--accent-soft);
+  margin-top: 8px;
+}
+
+/* ─── Composer at bottom (Coach Mode) ─── */
+.composer {
+  padding: 14px 20px 16px;
+  border-top: 1px solid var(--rule);
+  background: var(--paper);
+  display: none;
+}
+.composer.visible { display: block; }
+.composer-inner {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+.composer-input {
+  flex: 1;
+  background: #fff;
+  border: 1.5px solid var(--rule);
+  border-radius: 20px;
+  padding: 10px 16px;
+  font-family: var(--f-body);
+  font-size: 15px;
+  resize: none;
+  max-height: 120px;
+  min-height: 42px;
+  line-height: 1.4;
+}
+.composer-input:focus { outline: none; border-color: var(--ink); }
+.composer-send {
+  width: 42px; height: 42px;
+  background: var(--ink);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.composer-send:hover { background: var(--accent); transform: scale(1.05); }
+.composer-send:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+.composer-hint {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 8px;
+}
+.composer-suggest {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.suggest-chip {
+  padding: 6px 12px;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.suggest-chip:hover { border-color: var(--ink); color: var(--ink); }
+
+/* Start over button */
+.start-over {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  padding: 6px 12px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.start-over:hover { color: var(--ink); border-color: var(--ink); }
+@media (max-width: 520px) { .start-over { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="chat-header">
+    <div class="agent-identity">
+      <div class="agent-avatar">F</div>
+      <div class="agent-name-block">
+        <div class="agent-name">Business Foundations</div>
+        <div class="agent-status" id="agentStatus">Online · Popstart Agent</div>
+      </div>
+    </div>
+    <div class="progress-indicator" id="progressIndicator">
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+    </div>
+  </header>
+
+  <button class="start-over" onclick="restart()">Start over</button>
+
+  <main class="messages" id="messages"></main>
+
+  <div class="composer" id="composer">
+    <div class="composer-hint">Coach Mode · Ask anything about your results</div>
+    <div class="composer-suggest" id="composerSuggest"></div>
+    <div class="composer-inner">
+      <textarea class="composer-input" id="composerInput" placeholder="Type your question..." rows="1"></textarea>
+      <button class="composer-send" id="composerSend">→</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   POPSTART · BUSINESS FOUNDATIONS AGENT
+   Conversational implementation of ADD v1.0
+   
+   ARCHITECTURE
+   ────────────
+   respond(state, userInput) → [messages]
+     Single "brain" function. Today it's a rules engine
+     reading from the response library below. To swap in
+     an LLM later: replace this function with an API call
+     that receives the state + user input and returns the
+     same message shape. Everything else stays the same.
+   ════════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════════
+   STATE
+   ════════════════════════════════════════════════════════ */
+const state = {
+  mode: "audit",                      // audit | plan | coach
+  responses: {},                      // all captured inputs
+  step: "greet",                      // current step in the flow
+  gapsFired: new Set(),               // gaps already surfaced
+  history: [],                        // full message log (for LLM context later)
+  preflight: {}                       // pre-filled profile (empty for demo)
+};
+
+/* ══════════════════════════════════════════════════════════
+   CONVERSATION SCRIPT
+   Everything the agent says, keyed by step/context.
+   Ready to be replaced with LLM calls that receive the
+   same inputs.
+   ════════════════════════════════════════════════════════ */
+const script = {
+  greet: () => [
+    { type: "text", text: "Hi — I'm your Business Foundations agent." },
+    { type: "text", text: "Let's take a quick look at where your business finances stand. About five minutes, and you'll walk away with a prioritised action plan you can start on today." }
+  ],
+
+  askStage: () => ({
+    type: "input",
+    kind: "chips",
+    field: "business_stage",
+    prompt: "First — where are you right now with your business?",
+    options: [
+      { value: "thinking", label: "Thinking about it" },
+      { value: "pre-launch", label: "Pre-launch" },
+      { value: "existing", label: "Already running" }
+    ]
+  }),
+
+  ackStage: {
+    thinking: "You're still in exploration mode — perfect timing. We'll build your plan around what you'll want set up before the first dollar moves.",
+    "pre-launch": "Pre-launch is the cleanest moment to set this up. Let's make sure your foundation's ready before you open the doors.",
+    existing: "You're already running, so this will be a real audit. We'll check what's in place and flag anything worth tightening up."
+  },
+
+  askBusinessType: () => ({
+    type: "input",
+    kind: "chips",
+    field: "business_type",
+    prompt: "Do you sell a product, a service, or both?",
+    options: [
+      { value: "product", label: "Product" },
+      { value: "service", label: "Service" },
+      { value: "both", label: "Both" }
+    ]
+  }),
+
+  askIndustry: () => ({
+    type: "input",
+    kind: "dropdown",
+    field: "industry",
+    prompt: "And what industry are you in? (Used for tailored recommendations.)",
+    placeholder: "Pick your industry",
+    options: [
+      "Retail", "E-commerce", "Food & Beverage", "Professional Services",
+      "Creative / Agency", "Health & Wellness", "Technology / SaaS",
+      "Construction / Trades", "Manufacturing", "Real Estate",
+      "Education", "Hospitality", "Transportation", "Nonprofit", "Other"
+    ]
+  }),
+
+  sectionBIntro: () => [
+    { type: "system", text: "The audit · 4 questions" },
+    { type: "text", text: "Alright, here we go. Four quick questions about how your business finances are set up today." }
+  ],
+
+  askP1: () => ({
+    type: "input",
+    kind: "chips",
+    field: "biz_checking_account",
+    prompt: "Do you have a dedicated business checking account? I mean a separate one in your business's name — not a personal account you use for business stuff.",
+    options: [
+      { value: "yes", label: "Yes" },
+      { value: "no", label: "No" },
+      { value: "unsure", label: "Not sure" }
+    ]
+  }),
+
+  ackP1: {
+    yes: "Solid foundation.",
+    no: "Noted — we'll put this on your plan.",
+    unsure: "No problem — we'll clear that up."
+  },
+
+  askP1Blocker: () => ({
+    type: "input",
+    kind: "chips",
+    field: "checking_blocker",
+    prompt: "What's getting in the way? No wrong answer — helps me tailor your next step.",
+    options: [
+      { value: "time", label: "No time" },
+      { value: "where_start", label: "Don't know where to start" },
+      { value: "need", label: "Not sure if I need one" },
+      { value: "other", label: "Something else" }
+    ]
+  }),
+
+  askP1BlockerOther: () => ({
+    type: "input",
+    kind: "text",
+    field: "checking_blocker_other",
+    prompt: "Tell me more — what's the blocker?"
+  }),
+
+  askP2: () => ({
+    type: "input",
+    kind: "chips",
+    field: "biz_card",
+    prompt: "Next: do you have a dedicated business card — debit or credit? Card in your business's name, not your personal one.",
+    options: [
+      { value: "yes", label: "Yes" },
+      { value: "no", label: "No" },
+      { value: "unsure", label: "Not sure" }
+    ]
+  }),
+
+  ackP2: {
+    yes: "Nice.",
+    no: "On the list.",
+    unsure: "We'll sort it out."
+  },
+
+  askP2Personal: () => ({
+    type: "input",
+    kind: "chips",
+    field: "personal_card_use",
+    prompt: "Are you using a personal card for business purchases right now?",
+    options: [
+      { value: "yes", label: "Yes" },
+      { value: "no", label: "No" },
+      { value: "sometimes", label: "Sometimes" }
+    ]
+  }),
+
+  askP3: () => ({
+    type: "input",
+    kind: "chips",
+    field: "pay_process",
+    prompt: "Do you have a documented way you pay yourself from the business? Owner's draw, salary, regular transfer — any consistent pattern counts.",
+    options: [
+      { value: "yes", label: "Yes" },
+      { value: "no", label: "No" },
+      { value: "unsure", label: "Not sure" },
+      { value: "not_yet", label: "I don't take pay yet" }
+    ]
+  }),
+
+  ackP3: {
+    yes: "That's ahead of most founders.",
+    no: "Worth building — we'll get there.",
+    unsure: "We'll figure it out.",
+    not_yet: "Fair — timing's up to you."
+  },
+
+  askP3Method: () => ({
+    type: "input",
+    kind: "chips",
+    field: "pay_method",
+    prompt: "How are you paying yourself — or how do you plan to?",
+    options: [
+      { value: "owners_draw", label: "Owner's draw" },
+      { value: "salary", label: "Salary" },
+      { value: "transfer", label: "Transfer as needed" },
+      { value: "not_started", label: "Haven't started" },
+      { value: "need_help", label: "Not sure what the options are" }
+    ]
+  }),
+
+  askP4Existing: () => ({
+    type: "input",
+    kind: "chips",
+    field: "transaction_audit",
+    prompt: "Last question: have you audited the last 60 days of transactions for mixed personal/business spending?",
+    options: [
+      { value: "yes", label: "Yes" },
+      { value: "no", label: "No" }
+    ]
+  }),
+
+  askP4PreLaunch: () => ({
+    type: "input",
+    kind: "chips",
+    field: "transaction_audit",
+    prompt: "One last thing: once you launch, you'll want to run a 60-day transaction audit. Want me to include that on your plan?",
+    options: [
+      { value: "yes", label: "Yes, include it" },
+      { value: "skip", label: "Skip for now" }
+    ]
+  }),
+
+  askP4Statements: () => ({
+    type: "input",
+    kind: "chips",
+    field: "statement_access",
+    prompt: "Do you have access to your last 60 days of bank statements?",
+    options: [
+      { value: "yes", label: "Yes" },
+      { value: "no", label: "No" },
+      { value: "partial", label: "Partial" }
+    ]
+  }),
+
+  /* ────────────────────────────────────────────
+     GAP LIBRARY — probes surfaced mid-flow
+     ────────────────────────────────────────── */
+  gaps: {
+    commingling: "Sounds like personal and business are sharing the same pipes right now. That's really common — but it gets expensive at tax time and can cause problems if your business ever gets sued. Worth fixing. I'll flag this as a priority on your plan.",
+    pay_undefined: "Without a documented pay process, owner's draws and business expenses can blur together fast. Even a simple rule — same day each month, same amount — makes a real difference.",
+    audit_avoidance: "You've got the statements — that's the hard part. The audit itself is mostly a highlighter exercise: sixty days, highlight anything that looks mixed, that's it. I'll walk you through how when we get to your plan.",
+    prelaunch_reminder: "Quick flag: the 60-day audit becomes relevant the day you take your first dollar. Putting it on your calendar now means you won't forget.",
+    pay_options_needed: "Quick note — owner's draw and salary sound similar but have different tax implications depending on your business structure. Worth settling before money starts moving. The Entity & Tax agent goes deep on this.",
+    naics_later: "One thing worth flagging: when you open an account, most banks ask for a NAICS code — that's just a government classification for your business type. Takes two minutes to look up. I'll include it on your plan."
+  },
+
+  planIntro: () => [
+    { type: "system", text: "Building your action plan" },
+    { type: "text", text: "Alright — I've got everything I need. Here's where you stand and what to do next." }
+  ],
+
+  coachModeIntro: () => [
+    { type: "system", text: "Coach Mode · Ask anything" },
+    { type: "text", text: "Your plan is ready. Anything you'd like to talk through? I can walk through specific steps, explain a term, or recommend a bank based on your stage and state." }
+  ]
+};
+
+/* ══════════════════════════════════════════════════════════
+   FLOW ENGINE — the "brain"
+   Given current state + latest user input, returns next step.
+   Swap with LLM by matching the input/output shape.
+   ════════════════════════════════════════════════════════ */
+function advance(state) {
+  const r = state.responses;
+
+  // Audit flow state machine
+  switch (state.step) {
+    case "greet":
+      state.step = "stage";
+      return [...script.greet(), script.askStage()];
+
+    case "stage":
+      state.step = "business_type";
+      return [
+        { type: "text", text: script.ackStage[r.business_stage] },
+        script.askBusinessType()
+      ];
+
+    case "business_type":
+      state.step = "industry";
+      return [script.askIndustry()];
+
+    case "industry":
+      state.step = "p1";
+      return [...script.sectionBIntro(), script.askP1()];
+
+    case "p1":
+      if (r.biz_checking_account === "yes") {
+        state.step = "p2";
+        return [{ type: "text", text: script.ackP1.yes }, script.askP2()];
+      }
+      state.step = "p1_blocker";
+      return [{ type: "text", text: script.ackP1[r.biz_checking_account] }, script.askP1Blocker()];
+
+    case "p1_blocker":
+      if (r.checking_blocker === "other") {
+        state.step = "p1_blocker_other";
+        return [script.askP1BlockerOther()];
+      }
+      // Gap 6: thinking-stage paralysis
+      if (r.business_stage === "thinking" && r.checking_blocker === "where_start" && !state.gapsFired.has("thinking_paralysis")) {
+        state.gapsFired.add("thinking_paralysis");
+        state.step = "p2";
+        return [
+          { type: "text", text: "Totally fair — the admin side feels fuzzy until the business feels real. The low-stakes version: you don't need an account until you have an EIN or are ready to take money. For now, your plan is about knowing what's ahead." },
+          script.askP2()
+        ];
+      }
+      state.step = "p2";
+      return [script.askP2()];
+
+    case "p1_blocker_other":
+      state.step = "p2";
+      return [script.askP2()];
+
+    case "p2":
+      if (r.biz_card === "yes") {
+        state.step = "p3";
+        return [{ type: "text", text: script.ackP2.yes }, script.askP3()];
+      }
+      state.step = "p2_personal";
+      return [{ type: "text", text: script.ackP2[r.biz_card] }, script.askP2Personal()];
+
+    case "p2_personal":
+      // Gap 1: commingling
+      const msgs = [];
+      if (r.biz_checking_account !== "yes" && r.personal_card_use === "yes" &&
+          r.business_stage === "existing" && !state.gapsFired.has("commingling")) {
+        state.gapsFired.add("commingling");
+        msgs.push({ type: "text", text: script.gaps.commingling });
+      }
+      state.step = "p3";
+      msgs.push(script.askP3());
+      return msgs;
+
+    case "p3":
+      if (r.pay_process === "yes" || r.pay_process === "not_yet") {
+        // Gap 2 trigger check
+        const msgs = [{ type: "text", text: script.ackP3[r.pay_process] }];
+        return nextFromP3(msgs);
+      }
+      state.step = "p3_method";
+      return [{ type: "text", text: script.ackP3[r.pay_process] }, script.askP3Method()];
+
+    case "p3_method":
+      const p3Msgs = [];
+      // Gap: pay options needed
+      if (r.pay_method === "need_help" && !state.gapsFired.has("pay_options")) {
+        state.gapsFired.add("pay_options");
+        p3Msgs.push({ type: "text", text: script.gaps.pay_options_needed });
+      }
+      // Gap 2: pay undefined
+      if (r.business_stage === "existing" &&
+          (r.pay_process === "no" || r.pay_process === "unsure") &&
+          !state.gapsFired.has("pay_undefined")) {
+        state.gapsFired.add("pay_undefined");
+        p3Msgs.push({ type: "text", text: script.gaps.pay_undefined });
+      }
+      return nextFromP3(p3Msgs);
+
+    case "p4":
+      if (r.business_stage === "existing" && r.transaction_audit === "no") {
+        state.step = "p4_statements";
+        return [script.askP4Statements()];
+      }
+      return goToPlan();
+
+    case "p4_statements":
+      const p4Msgs = [];
+      // Gap 4: audit avoidance
+      if (r.statement_access === "yes" && !state.gapsFired.has("audit_avoidance")) {
+        state.gapsFired.add("audit_avoidance");
+        p4Msgs.push({ type: "text", text: script.gaps.audit_avoidance });
+      }
+      return goToPlan(p4Msgs);
+  }
+
+  function nextFromP3(prefixMsgs = []) {
+    if (state.responses.business_stage === "thinking") {
+      // Gap: NAICS mention
+      if (!state.gapsFired.has("naics")) {
+        state.gapsFired.add("naics");
+        prefixMsgs.push({ type: "text", text: script.gaps.naics_later });
+      }
+      return goToPlan(prefixMsgs);
+    }
+    state.step = "p4";
+    if (state.responses.business_stage === "pre-launch") {
+      prefixMsgs.push(script.askP4PreLaunch());
+    } else {
+      prefixMsgs.push(script.askP4Existing());
+    }
+    return prefixMsgs;
+  }
+
+  function goToPlan(prefixMsgs = []) {
+    // Gap 5: pre-launch overconfidence (all checks yes)
+    if (state.responses.business_stage === "pre-launch" &&
+        state.responses.biz_checking_account === "yes" &&
+        state.responses.biz_card === "yes" &&
+        state.responses.pay_process === "yes" &&
+        !state.gapsFired.has("prelaunch_confidence")) {
+      state.gapsFired.add("prelaunch_confidence");
+      prefixMsgs.push({ type: "text", text: script.gaps.prelaunch_reminder });
+    }
+    state.step = "plan";
+    state.mode = "plan";
+    const plan = buildPlan(state.responses);
+    return [
+      ...prefixMsgs,
+      ...script.planIntro(),
+      { type: "plan", plan }
+    ];
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   ACTION PLAN BUILDER
+   ════════════════════════════════════════════════════════ */
+function buildPlan(d) {
+  const stage = d.business_stage;
+  const rag = buildRAG(d, stage);
+  const gaps = buildGaps(d, stage, rag);
+  const steps = buildSteps(d, stage, rag);
+  const quickWin = pickQuickWin(steps, d);
+  const stageNote = {
+    thinking: "You're in exploration mode — nothing here needs to happen tomorrow. This is a map of what's ahead.",
+    "pre-launch": "Pre-launch is the cleanest moment to set this up. Doing it now means nothing to untangle later.",
+    existing: "You're already in motion — the fix is course-correcting, not starting over."
+  }[stage];
+
+  return { stage, stageNote, rag, gaps, steps, quickWin };
+}
+
+function buildRAG(d, stage) {
+  const items = [];
+
+  let s = "red", n = "Not set up";
+  if (d.biz_checking_account === "yes") { s = "green"; n = "Separate account in place"; }
+  else if (d.biz_checking_account === "unsure") { s = "amber"; n = "Needs clarifying"; }
+  if (stage === "thinking" && d.biz_checking_account !== "yes") { s = "amber"; n = "Open when ready"; }
+  items.push({ title: "Checking account", status: s, note: n });
+
+  s = "red"; n = "Not set up";
+  if (d.biz_card === "yes") { s = "green"; n = "Business card in use"; }
+  else if (d.biz_card === "unsure") { s = "amber"; n = "Needs clarifying"; }
+  if (stage === "thinking" && d.biz_card !== "yes") { s = "amber"; n = "Set up alongside account"; }
+  items.push({ title: "Business card", status: s, note: n });
+
+  s = "red"; n = "No process";
+  if (d.pay_process === "yes") { s = "green"; n = "Process documented"; }
+  else if (d.pay_process === "unsure") { s = "amber"; n = "Needs clarifying"; }
+  else if (d.pay_process === "not_yet") { s = "amber"; n = "Not paying yet — fine"; }
+  if (stage === "thinking" && d.pay_process !== "yes") { s = "amber"; n = "Define before paying out"; }
+  items.push({ title: "Pay process", status: s, note: n });
+
+  s = "red"; n = "Not run";
+  if (stage === "thinking") { s = "na"; n = "N/A — no transactions yet"; }
+  else if (stage === "pre-launch") {
+    s = "amber";
+    n = d.transaction_audit === "yes" ? "Scheduled post-launch" : "Run 60 days after launch";
+  }
+  else if (d.transaction_audit === "yes") { s = "green"; n = "Audit complete"; }
+  items.push({ title: "60-day audit", status: s, note: n });
+
+  return items;
+}
+
+function buildGaps(d, stage, rag) {
+  const gaps = [];
+  rag.forEach(r => {
+    if (r.status === "green" || r.status === "na") return;
+    if (r.title === "Checking account") {
+      gaps.push({
+        title: "No dedicated business account",
+        body: stage === "existing"
+          ? "Personal and business sharing the same account slows tax season, costs deductions, and blurs the line if anything ever triggers a legal question. A separate account fixes all three."
+          : "Opening an account before your first transaction means every dollar starts clean — nothing to untangle later."
+      });
+    }
+    if (r.title === "Business card") {
+      gaps.push({
+        title: "No business card",
+        body: d.personal_card_use === "yes"
+          ? "Mixing purchases on a personal card makes expense tracking painful and costs you deductions. A business debit card closes the gap in a week."
+          : "A business card — even a debit card — separates what gets tracked from what doesn't. Credit cards also build business credit, which matters later."
+      });
+    }
+    if (r.title === "Pay process") {
+      gaps.push({
+        title: "No documented pay process",
+        body: d.pay_method === "need_help"
+          ? "Owner's draw and salary sound similar but have different tax implications. Worth settling before money starts moving — the Entity & Tax agent walks through both."
+          : "Without a regular pattern, pay-outs get mistaken for business expenses and vice versa. Even a simple rule — same day, same amount — keeps the books clean."
+      });
+    }
+    if (r.title === "60-day audit" && stage === "existing") {
+      gaps.push({
+        title: "60-day audit not run",
+        body: d.statement_access === "yes"
+          ? "You've got the statements — it's mostly a highlighter exercise. An hour flags anything mixed and sets a baseline going forward."
+          : "Pull the last 60 days from your bank's portal, review for anything mixed. Less painful than it sounds."
+      });
+    }
+  });
+  return gaps;
+}
+
+function buildSteps(d, stage, rag) {
+  const steps = [];
+  if (rag.find(r => r.title === "Checking account" && r.status !== "green")) {
+    steps.push({
+      title: "Open a business checking account",
+      why: stage === "thinking"
+        ? "Know your options now — open when you're ready to take money."
+        : "Priority one. Most online banks open same-day with an EIN and no minimum.",
+      time: "15–30 min"
+    });
+  }
+  if (rag.find(r => r.title === "Business card" && r.status !== "green")) {
+    steps.push({
+      title: "Get a dedicated business card",
+      why: d.personal_card_use === "yes"
+        ? "Stop the mixing at the source. A business debit card from your new account is the quickest path."
+        : "Debit for simplicity. Credit if you want to build business credit — a separate score from your personal one.",
+      time: "10 min"
+    });
+  }
+  if (rag.find(r => r.title === "Pay process" && r.status !== "green") && d.pay_process !== "not_yet") {
+    steps.push({
+      title: "Define how you pay yourself",
+      why: d.pay_method === "need_help"
+        ? "Start with owner's draw if you're a sole prop or LLC. The Entity & Tax agent will build it out properly."
+        : "Pick a cadence and amount. Write it down. Stick to it.",
+      time: "20 min"
+    });
+  }
+  if (stage === "existing" && rag.find(r => r.title === "60-day audit" && r.status !== "green")) {
+    steps.push({
+      title: "Run a 60-day transaction audit",
+      why: d.statement_access === "no"
+        ? "First: download statements from your bank. Then: highlight anything mixed."
+        : "Pull statements, highlight mixed items, categorise.",
+      time: "45–60 min"
+    });
+  }
+  if (stage === "pre-launch" && d.transaction_audit === "yes") {
+    steps.push({
+      title: "Calendar a 60-day post-launch audit",
+      why: "Catching mixing early is far easier than untangling six months of entries.",
+      time: "2 min"
+    });
+  }
+  if (stage === "thinking") {
+    steps.push({
+      title: "Sort out an EIN when you're ready",
+      why: "An EIN is the government ID for your business. Free from the IRS, takes ten minutes, and most banks ask for it.",
+      time: "10 min"
+    });
+  }
+  return steps;
+}
+
+function pickQuickWin(steps, d) {
+  const priority = [
+    "Calendar a 60-day post-launch audit",
+    "Get a dedicated business card",
+    "Sort out an EIN when you're ready",
+    "Define how you pay yourself"
+  ];
+  for (const title of priority) {
+    const found = steps.find(s => s.title === title);
+    if (found) return found;
+  }
+  return steps[0] || { title: "Book 15 minutes with yourself this week", why: "Pick one step and make it real.", time: "15 min" };
+}
+
+/* ══════════════════════════════════════════════════════════
+   COACH MODE
+   Scripted responses to common topics from the ADD
+   ════════════════════════════════════════════════════════ */
+const coachLibrary = [
+  {
+    keywords: ["bank", "which bank", "recommend", "account"],
+    respond: (s) => {
+      const stage = s.responses.business_stage;
+      if (stage === "thinking") {
+        return "For someone in your stage, I'd focus on online banks — Bluevine, Relay, Mercury are popular because they open fast with no minimum. Worth knowing your options now so you can move when you're ready.";
+      }
+      return "Online banks (Bluevine, Relay, Mercury) open same-day with an EIN and no minimum. Traditional banks (Chase, BofA) take longer but offer in-person help. Credit unions often have the best rates if you qualify. I don't have preferred partner data in this demo — your Popstart profile would surface state-specific recommendations.";
+    }
+  },
+  {
+    keywords: ["owner", "draw", "salary", "pay myself"],
+    respond: () => "Owner's draw means you take money out as needed — no tax withheld at the time (you pay quarterly). Salary means you're on payroll, taxes withheld automatically, more paperwork. For sole prop and single-member LLC, draw is usually simpler. For S-corps, salary is often required. This gets into entity territory, so the Entity & Tax agent is the right place for specifics — and worth a CPA conversation for anything you'll actually file."
+  },
+  {
+    keywords: ["audit", "60 day", "sixty day", "how do i"],
+    respond: () => "The audit is less painful than it sounds. Three steps: (1) Download the last 60 days of statements from your bank and any cards you've used for business. (2) Print them or open them side by side. (3) Highlight anything that looks mixed — personal expenses on the business account, business expenses on the personal card. That's it. Takes most founders under an hour. The Bookkeeping Basics agent has a full walkthrough if you want more depth."
+  },
+  {
+    keywords: ["ein", "tax id", "irs"],
+    respond: () => "An EIN — Employer Identification Number — is like a Social Security Number for your business. Free from the IRS, takes about ten minutes online at irs.gov. You'll need one to open most business accounts, and it keeps your personal SSN off business paperwork. Even if you're a sole prop, getting one is worth it."
+  },
+  {
+    keywords: ["llc", "sole prop", "entity", "structure", "s-corp", "corporation"],
+    respond: () => "That's really an Entity & Tax question — worth getting right because it affects your taxes and your personal liability. I can give you the general picture but for anything you'll actually file, the Entity & Tax agent goes deep and I'd pair that with a CPA conversation."
+  },
+  {
+    keywords: ["credit card", "business credit", "build credit"],
+    respond: () => "Business credit is a score separate from your personal credit. A business credit card (used responsibly and paid off) is the main way to build it. Matters most if you ever apply for a loan or line of credit. Cards like Capital One Spark, Chase Ink, and Amex Business all report to business credit bureaus. Note: most issuers will check your personal credit to approve the card initially — that's normal."
+  },
+  {
+    keywords: ["how much", "cushion", "buffer", "reserve", "keep"],
+    respond: () => "Good question — and the Working Capital Estimator agent is built exactly for this. Rough rule of thumb: 3 months of operating expenses as a cushion, but it varies a lot by business model. Run that agent after this one for a real number."
+  },
+  {
+    keywords: ["bookkeeping", "books", "categorise", "categorize"],
+    respond: () => "The Bookkeeping Basics agent handles all of that — what to track, how to categorise, which tools to use. Great follow-on once you've got your separation sorted."
+  },
+  {
+    keywords: ["tax", "taxes", "deduct", "write off"],
+    respond: () => "Tax questions land on CPA territory fast — I can give you general concepts but not anything that affects what you actually file. The Entity & Tax agent is the right depth for most of this, and for filings specifically, a CPA is worth the money."
+  }
+];
+
+function coachRespond(userText) {
+  const lower = userText.toLowerCase();
+  // Find best match
+  let best = null, bestScore = 0;
+  for (const entry of coachLibrary) {
+    const score = entry.keywords.filter(k => lower.includes(k)).length;
+    if (score > bestScore) { bestScore = score; best = entry; }
+  }
+  if (best && bestScore > 0) {
+    return best.respond(state);
+  }
+  // Fallback
+  return "That's a great question — but outside what I can help with directly in this session. If it's about tax or legal specifics, a CPA or attorney is the right call. If it's about a different part of running the business, check the other Popstart agents — they go deeper in their lanes. What else is on your mind about your plan?";
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENDER LAYER
+   ════════════════════════════════════════════════════════ */
+const messagesEl = document.getElementById("messages");
+const progressEl = document.getElementById("progressIndicator");
+const composerEl = document.getElementById("composer");
+const composerInput = document.getElementById("composerInput");
+const composerSend = document.getElementById("composerSend");
+const composerSuggest = document.getElementById("composerSuggest");
+const agentStatus = document.getElementById("agentStatus");
+
+function scrollToBottom() {
+  setTimeout(() => messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: "smooth" }), 20);
+}
+
+function showTyping() {
+  const el = document.createElement("div");
+  el.className = "typing";
+  el.id = "typingIndicator";
+  el.innerHTML = `
+    <div class="msg-avatar-small">F</div>
+    <div class="typing-bubble">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>`;
+  messagesEl.appendChild(el);
+  scrollToBottom();
+}
+function hideTyping() {
+  const el = document.getElementById("typingIndicator");
+  if (el) el.remove();
+}
+
+function renderMessage(m) {
+  if (m.type === "text") {
+    const el = document.createElement("div");
+    el.className = "msg msg-agent";
+    el.innerHTML = `
+      <div class="msg-avatar-small">F</div>
+      <div class="msg-bubble">${m.text}</div>`;
+    messagesEl.appendChild(el);
+  }
+  else if (m.type === "user") {
+    const el = document.createElement("div");
+    el.className = "msg msg-user";
+    el.textContent = m.text;
+    messagesEl.appendChild(el);
+  }
+  else if (m.type === "system") {
+    const el = document.createElement("div");
+    el.className = "msg msg-system";
+    el.textContent = m.text;
+    messagesEl.appendChild(el);
+  }
+  else if (m.type === "input") {
+    renderInput(m);
+  }
+  else if (m.type === "plan") {
+    renderPlan(m.plan);
+  }
+  state.history.push(m);
+  scrollToBottom();
+  updateProgress();
+}
+
+function renderInput(m) {
+  // Render the prompt bubble first
+  const promptEl = document.createElement("div");
+  promptEl.className = "msg msg-agent";
+  promptEl.innerHTML = `
+    <div class="msg-avatar-small">F</div>
+    <div class="msg-bubble">${m.prompt}</div>`;
+  messagesEl.appendChild(promptEl);
+
+  const wrap = document.createElement("div");
+  wrap.className = "input-wrap";
+  wrap.dataset.field = m.field;
+
+  if (m.kind === "chips") {
+    const row = document.createElement("div");
+    row.className = "chip-row";
+    m.options.forEach(opt => {
+      const chip = document.createElement("button");
+      chip.className = "chip";
+      chip.textContent = opt.label;
+      chip.onclick = () => handleInputAnswer(m.field, opt.value, opt.label, wrap);
+      row.appendChild(chip);
+    });
+    wrap.appendChild(row);
+  }
+  else if (m.kind === "dropdown") {
+    const ddWrap = document.createElement("div");
+    ddWrap.className = "dropdown-wrap";
+    const btn = document.createElement("button");
+    btn.className = "dropdown-btn";
+    btn.innerHTML = `<span>${m.placeholder || "Choose one"}</span><span class="dropdown-arrow">▾</span>`;
+    const menu = document.createElement("div");
+    menu.className = "dropdown-menu";
+    m.options.forEach(o => {
+      const item = document.createElement("div");
+      item.className = "dropdown-item";
+      item.textContent = o;
+      item.onclick = () => {
+        menu.classList.remove("open");
+        btn.classList.add("has-value");
+        btn.querySelector("span").textContent = o;
+        handleInputAnswer(m.field, o, o, wrap);
+      };
+      menu.appendChild(item);
+    });
+    btn.onclick = () => menu.classList.toggle("open");
+    ddWrap.append(btn, menu);
+    wrap.appendChild(ddWrap);
+  }
+  else if (m.kind === "text") {
+    const tWrap = document.createElement("div");
+    tWrap.className = "text-input-wrap";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "text-input";
+    input.placeholder = "Type your answer...";
+    const btn = document.createElement("button");
+    btn.className = "text-submit";
+    btn.textContent = "Send";
+    const submit = () => {
+      const v = input.value.trim();
+      if (!v) return;
+      handleInputAnswer(m.field, v, v, wrap);
+    };
+    btn.onclick = submit;
+    input.addEventListener("keypress", e => { if (e.key === "Enter") submit(); });
+    tWrap.append(input, btn);
+    wrap.appendChild(tWrap);
+    setTimeout(() => input.focus(), 100);
+  }
+
+  messagesEl.appendChild(wrap);
+}
+
+function handleInputAnswer(field, value, label, wrapEl) {
+  // Lock the input: mark selected, disable clicks
+  wrapEl.querySelectorAll(".chip").forEach(c => {
+    if (c.textContent === label) c.classList.add("selected");
+  });
+  wrapEl.querySelectorAll(".chip, .dropdown-btn, .text-input, .text-submit").forEach(el => {
+    el.disabled = true;
+    if (el.tagName === "BUTTON" && !el.classList.contains("selected")) {
+      el.style.opacity = "0.4";
+    }
+  });
+  // Render as user message
+  renderMessage({ type: "user", text: label });
+  state.responses[field] = value;
+  // Next turn
+  setTimeout(() => runTurn(), 400);
+}
+
+function renderPlan(plan) {
+  const wrap = document.createElement("div");
+  wrap.className = "plan-cards";
+
+  // Card 1: Where you stand
+  const card1 = document.createElement("div");
+  card1.className = "plan-card card1";
+  const ragHtml = plan.rag.map(r => `
+    <div class="rag-item ${r.status}">
+      <div class="rag-item-title">${r.title}</div>
+      <div class="rag-item-note">${r.note}</div>
+    </div>`).join("");
+  card1.innerHTML = `
+    <div class="plan-card-label">Card 01 · Where you stand</div>
+    <div class="plan-card-title">Your four foundations</div>
+    <div class="rag-grid">${ragHtml}</div>`;
+  wrap.appendChild(card1);
+
+  // Card 2: Why it matters (only if gaps exist)
+  if (plan.gaps.length > 0) {
+    const card2 = document.createElement("div");
+    card2.className = "plan-card card2";
+    const gapsHtml = plan.gaps.map(g => `
+      <div class="gap-entry">
+        <div class="gap-entry-title">${g.title}</div>
+        <div class="gap-entry-body">${g.body}</div>
+      </div>`).join("");
+    card2.innerHTML = `
+      <div class="plan-card-label">Card 02 · Why it matters</div>
+      <div class="plan-card-title">What each gap actually costs</div>
+      ${gapsHtml}`;
+    wrap.appendChild(card2);
+  }
+
+  // Card 3: Next steps
+  const card3 = document.createElement("div");
+  card3.className = "plan-card card3";
+  const stepsHtml = plan.steps.map((s, i) => `
+    <div class="step-entry">
+      <div class="step-num">${String(i + 1).padStart(2, "0")}</div>
+      <div>
+        <div class="step-title">${s.title}</div>
+        <div class="step-why">${s.why}</div>
+      </div>
+      <div class="step-time">${s.time}</div>
+    </div>`).join("");
+  card3.innerHTML = `
+    <div class="plan-card-label">Card 03 · Next steps</div>
+    <div class="plan-card-title">What to do, in order</div>
+    ${stepsHtml || '<div style="color:var(--ink-muted);font-size:14px">Nothing urgent — keep it clean.</div>'}`;
+  wrap.appendChild(card3);
+
+  // Card 4: Quick win
+  const card4 = document.createElement("div");
+  card4.className = "plan-card card4";
+  card4.innerHTML = `
+    <div class="plan-card-label">Card 04 · Do today</div>
+    <div class="plan-card-title"><em>${plan.quickWin.title}</em></div>
+    <div class="plan-card-body">${plan.quickWin.why}</div>
+    <div class="quick-win-badge">${plan.quickWin.time}</div>`;
+  wrap.appendChild(card4);
+
+  messagesEl.appendChild(wrap);
+
+  // Stage note as a follow-up message
+  setTimeout(() => {
+    renderMessage({ type: "text", text: plan.stageNote });
+    setTimeout(() => enterCoachMode(), 700);
+  }, 400);
+}
+
+function enterCoachMode() {
+  state.mode = "coach";
+  state.step = "coach";
+  agentStatus.textContent = "Coach Mode · Ask anything";
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    script.coachModeIntro().forEach(m => renderMessage(m));
+    composerEl.classList.add("visible");
+    // Render suggestion chips
+    composerSuggest.innerHTML = "";
+    ["Which bank should I pick?", "Owner's draw vs. salary?", "How do I run the 60-day audit?", "What's an EIN?"].forEach(sug => {
+      const chip = document.createElement("button");
+      chip.className = "suggest-chip";
+      chip.textContent = sug;
+      chip.onclick = () => { composerInput.value = sug; sendCoachMessage(); };
+      composerSuggest.appendChild(chip);
+    });
+    composerInput.focus();
+    scrollToBottom();
+  }, 800);
+}
+
+function sendCoachMessage() {
+  const text = composerInput.value.trim();
+  if (!text) return;
+  renderMessage({ type: "user", text });
+  composerInput.value = "";
+  composerSuggest.style.display = "none";
+
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    const reply = coachRespond(text);
+    renderMessage({ type: "text", text: reply });
+  }, 600 + Math.random() * 400);
+}
+
+composerSend.onclick = sendCoachMessage;
+composerInput.addEventListener("keypress", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendCoachMessage();
+  }
+});
+
+/* ══════════════════════════════════════════════════════════
+   PROGRESS INDICATOR
+   ════════════════════════════════════════════════════════ */
+function updateProgress() {
+  const stepToDot = {
+    greet: 0, stage: 0, business_type: 0, industry: 0,
+    p1: 0, p1_blocker: 0, p1_blocker_other: 0,
+    p2: 1, p2_personal: 1,
+    p3: 2, p3_method: 2,
+    p4: 3, p4_statements: 3,
+    plan: 4, coach: 4
+  };
+  const idx = stepToDot[state.step] ?? 0;
+  const dots = progressEl.querySelectorAll(".progress-dot");
+  dots.forEach((d, i) => {
+    d.classList.remove("active", "done");
+    if (i < idx) d.classList.add("done");
+    else if (i === idx && idx < 4) d.classList.add("active");
+    else if (idx >= 4) d.classList.add("done");
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   TURN RUNNER
+   ════════════════════════════════════════════════════════ */
+function runTurn() {
+  showTyping();
+  // Simulated "thinking" delay, tuned for readability
+  setTimeout(() => {
+    hideTyping();
+    const msgs = advance(state);
+    if (!msgs) return;
+    // Stream messages with micro-delays so each lands individually
+    let delay = 0;
+    msgs.forEach((m, i) => {
+      setTimeout(() => {
+        // Show typing dots between agent messages when more than one lands
+        if (i > 0 && (m.type === "text" || m.type === "input")) {
+          showTyping();
+          setTimeout(() => { hideTyping(); renderMessage(m); }, 400);
+        } else {
+          renderMessage(m);
+        }
+      }, delay);
+      delay += m.type === "input" ? 500 : 700;
+    });
+  }, 600);
+}
+
+/* ══════════════════════════════════════════════════════════
+   RESTART
+   ════════════════════════════════════════════════════════ */
+function restart() {
+  state.mode = "audit";
+  state.responses = {};
+  state.step = "greet";
+  state.gapsFired = new Set();
+  state.history = [];
+  messagesEl.innerHTML = "";
+  composerEl.classList.remove("visible");
+  composerSuggest.style.display = "";
+  agentStatus.textContent = "Online · Popstart Agent";
+  updateProgress();
+  runTurn();
+}
+
+/* ══════════════════════════════════════════════════════════
+   BOOT
+   ════════════════════════════════════════════════════════ */
+runTurn();
+</script>
+
+</body>
+</html>
